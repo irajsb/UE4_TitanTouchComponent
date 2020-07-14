@@ -5,7 +5,7 @@
 #include "Kismet/KismetMathLibrary.h"
 
 static inline bool IsVector2DInRange(FVector2D in, FVector2D Center, FVector2D Size)
-{
+{//sometimes i need to Divide size by two to make it work:S
     if(Center.X-Size.X<in.X&&in.X<Center.X+Size.X)
     {
         if(Center.Y-Size.Y<in.Y&&in.Y<Center.Y+Size.Y)
@@ -18,14 +18,15 @@ static inline bool IsVector2DInRange(FVector2D in, FVector2D Center, FVector2D S
     return false;
 }
 void UTouchObject::HandlePress(FVector2D Location)
-{
+{    //Handle Pressing 
     OnPress.Broadcast(Location);
     bIsPressed=true;
     TouchLocation=Location;
 }
 
 void UTouchObject::HandleRelease(FVector2D Location)
-{  TouchLocation=Center;
+{//reset touch
+    TouchLocation=Data.Center;
     OnRelease.Broadcast(Location);
 
     //recenter Thumb
@@ -37,32 +38,35 @@ void UTouchObject::HandleRelease(FVector2D Location)
 void UTouchObject::HandleMove(FVector2D Location)
 {
     if(ReservedIndex!=255&&bIsPressed==true){
-        if(Type==ETouchComponentType::Swipe)
+        if(Data.Type==ETouchComponentType::Swipe)
         {
             const FVector2D SwipeAmount =TouchLocation-Location;
             JoyStickAxis.Broadcast(SwipeAmount.X,SwipeAmount.Y);
-UE_LOG(LogTemp,Log,TEXT("%f"),SwipeAmount.X);
+
 
     
-        }else{
-            OnMove.Broadcast(Location);
+        }
+        else
+            {
+            OnMove.Broadcast(Location); 
         }
 
         TouchLocation=Location;
 
 
    
-        if(ETouchComponentType::Joystick==Type)
+        if(ETouchComponentType::Joystick==Data.Type)
         {
         
                 FVector AxisSize=FVector( CanvasLocation-Location,0);
       
-      
-                AxisSize.X=UKismetMathLibrary::MapRangeClamped(AxisSize.X,-ThumbClamp,ThumbClamp,1,-1);
-                AxisSize.Y=UKismetMathLibrary::MapRangeClamped(AxisSize.Y,-ThumbClamp,ThumbClamp,-1,1);
+ //map from range to -1,1     
+                AxisSize.X=UKismetMathLibrary::MapRangeClamped(AxisSize.X,-Data.ThumbClamp,Data.ThumbClamp,1,-1);
+                AxisSize.Y=UKismetMathLibrary::MapRangeClamped(AxisSize.Y,-Data.ThumbClamp,Data.ThumbClamp,-1,1);
                 XInput= AxisSize.GetClampedToSize2D(-1,1).X;
                 YInput=AxisSize.GetClampedToSize2D(-1,1).Y;
-                if(!BroadCastConstant)
+//if we need to broadcast in tick we dont need this broadcast 
+            if(!Data.BroadCastConstant)
                     JoyStickAxis.Broadcast(XInput,YInput);
          
         }
@@ -70,20 +74,21 @@ UE_LOG(LogTemp,Log,TEXT("%f"),SwipeAmount.X);
 }
 
 void UTouchObject::ReCenter(FVector2D Location)
-{Center=Location/ HUD->ResRatio;
+{//used to move joystick to touch location if inside square
+    Data.Center=Location/ HUD->ResRatio;
 }
 
 void UTouchObject::DrawTouchObject()
-{
+{//Draw Handler for each type of objects 
 
-    if(Type==ETouchComponentType::Joystick)
+    if(Data.Type==ETouchComponentType::Joystick)
     {
         DrawJoystick();
     }
-    else if(Type==ETouchComponentType::Button){
+    else if(Data.Type==ETouchComponentType::Button){
 DrawButton();
     }
-    else if(Type==ETouchComponentType::Swipe)
+    else if(Data.Type==ETouchComponentType::Swipe)
     {
         DrawSwipe();
     }
@@ -98,16 +103,16 @@ void UTouchObject::DrawJoystick()
     //Draw BG
     if(bIsPressed)
     {
-        HUD->DrawTextureCentered(BackGround,Center.X,Center.Y,VisualSize.X,VisualSize.Y,ActiveColor);
-        HUD->DrawTextureCentered(JoystickThumb,Center.X-XInput*-ThumbClamp,Center.Y-YInput*ThumbClamp,VisualSize.X*(Radius/VisualSize.X),VisualSize.Y*(Radius/VisualSize.Y),ActiveColor);
+        HUD->DrawTextureCentered(Data.BackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.ActiveColor);
+        HUD->DrawTextureCentered(Data.JoystickThumb,Data.Center.X-XInput*-Data.ThumbClamp,Data.Center.Y-YInput*Data.ThumbClamp,Data.VisualSize.X*(Data.FunctionalRadius/Data.VisualSize.X),Data.VisualSize.Y*(Data.FunctionalRadius/Data.VisualSize.Y),Data.ActiveColor);
     }else
     {
-        HUD->DrawTextureCentered(InActiveBackGround,Center.X,Center.Y,VisualSize.X,VisualSize.Y,InActiveColor);
-        HUD->DrawTextureCentered(InActiveJoystickThumb,Center.X-XInput*-ThumbClamp,Center.Y-YInput*ThumbClamp,VisualSize.X*(Radius/VisualSize.X),VisualSize.Y*(Radius/VisualSize.Y),InActiveColor);
+        HUD->DrawTextureCentered(Data.InActiveBackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.InActiveColor);
+        HUD->DrawTextureCentered(Data.InActiveJoystickThumb,Data.Center.X-XInput*-Data.ThumbClamp,Data.Center.Y-YInput*Data.ThumbClamp,Data.VisualSize.X*(Data.FunctionalRadius/Data.VisualSize.X),Data.VisualSize.Y*(Data.FunctionalRadius/Data.VisualSize.Y),Data.InActiveColor);
     }
     //Draw Thumb
- 
-    CanvasLocation=FVector2D(HUD->ResRatio* Center.X,HUD->ResRatio*Center.Y);
+ //Old code method to get object exact location in viewport
+    CanvasLocation=FVector2D(HUD->ResRatio* Data.Center.X,HUD->ResRatio*Data.Center.Y);
       
      
     
@@ -115,33 +120,34 @@ void UTouchObject::DrawJoystick()
 
 void UTouchObject::DrawButton()
 {
+    
     if(bIsPressed)
     {
-        HUD->DrawTextureCentered(BackGround,Center.X,Center.Y,VisualSize.X,VisualSize.Y,ActiveColor);
+        HUD->DrawTextureCentered(Data.BackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.ActiveColor);
     }else
     {
-        HUD->DrawTextureCentered(InActiveBackGround,Center.X,Center.Y,VisualSize.X,VisualSize.Y,InActiveColor);
+        HUD->DrawTextureCentered(Data.InActiveBackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.InActiveColor);
     }
-    CanvasLocation=FVector2D(HUD->ResRatio* Center.X,HUD->ResRatio*Center.Y);
+    CanvasLocation=FVector2D(HUD->ResRatio* Data.Center.X,HUD->ResRatio*Data.Center.Y);
 }
 
 void UTouchObject::DrawSwipe()
 {
-    CanvasLocation=FVector2D(HUD->ResRatio* Center.X,HUD->ResRatio*Center.Y);
+    CanvasLocation=FVector2D(HUD->ResRatio* Data.Center.X,HUD->ResRatio*Data.Center.Y);
 }
 
 void UTouchObject::Tick()
 {
-  if(Type==ETouchComponentType::Joystick)
+  if(Data.Type==ETouchComponentType::Joystick)
   {
       if(ReservedIndex!=255&&bIsPressed==true)
       {
           const FVector AxisSize=FVector( CanvasLocation-TouchLocation,0);
-          if(FollowTouchSize!=0&&AxisSize.Size()>FollowTouchSize&&(SquareCenter.IsZero()||(IsVector2DInRange(Center,SquareCenter,SquareSize/2)||IsVector2DInRange(TouchLocation,SquareCenter,SquareSize/2))))
-              Center=UKismetMathLibrary::Vector2DInterpTo(Center,TouchLocation,1,0.01);
+          if(Data.FollowTouchSize!=0&&AxisSize.Size()>Data.FollowTouchSize&&(SquareCenter.IsZero()||(IsVector2DInRange(Data.Center,SquareCenter,Data.SquareSize/2)||IsVector2DInRange(TouchLocation,SquareCenter,Data.SquareSize/2))))
+             Data. Center=UKismetMathLibrary::Vector2DInterpTo(Data.Center,TouchLocation,1,0.01);
    
       }
-      if(BroadCastConstant)
+      if(Data.BroadCastConstant)
           JoyStickAxis.Broadcast(XInput,YInput);
   }
 }

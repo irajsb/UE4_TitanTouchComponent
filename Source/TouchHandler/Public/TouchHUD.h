@@ -17,18 +17,19 @@ class TOUCHHANDLER_API ATouchHUD : public AHUD
 {
     GENERATED_BODY()
 public:
+    /* Parent of Components*/
     UPROPERTY(EditAnywhere,BlueprintReadWrite)
     class UTouchHandlerObject* TouchHandler;
-    UPROPERTY(EditAnywhere)
-    bool bJoystickDebugEnabled;
+ 
     ATouchHUD();
     virtual void DrawHUD()override;
     void DrawTextureCentered(UTexture2D* Texture,float x ,float y,float Width,float Height,FLinearColor Color);
     void  DrawDebugRectCentered(FLinearColor col,float x ,float y ,float w ,float h);
     UCanvas* GetCanvas()const;
-    /*Res relation with 1280*720*/
+    /*Res relation relative to 1280*720*/
     UPROPERTY()
-	float ResRatio;
+    float ResRatio;
+    /* Call this in Blueprint implementable function on recive draw HUD*/
     UFUNCTION(BlueprintCallable)
     void DrawDebugs();
 };

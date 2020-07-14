@@ -30,7 +30,7 @@ class TOUCHHANDLER_API UTouchHandlerObject : public UActorComponent
 public:
     UPROPERTY(EditAnywhere)
 TArray<FTouchSetup>ComponentsSetup;
-    /* if you need extra functionality set to 0 for disable */
+    /* >0 if you need extra functionality set to 0 to disable */
     UPROPERTY(EditAnywhere)
     float TickRate ;
     UPROPERTY(BlueprintReadOnly)
@@ -42,7 +42,7 @@ TArray<FTouchSetup>ComponentsSetup;
     UFUNCTION(BlueprintCallable, Category = "Stuff", Meta = (ExpandEnumAsExecs = "Branches"))
  void PassInput(FVector Location , TEnumAsByte<ETouchInputBranch> Branches,ETouchIndex::Type FingerIndex );
     /* is "in" between center.x-size and center.x+size IE: is point in a square with center of center and edge length of size*/
-	static bool IsVector2DInRange(FVector2D in, FVector2D Center,float Size);
+    static bool IsVector2DInRange(FVector2D in, FVector2D Center,float Size);
     static bool IsVector2DInRange(FVector2D in, FVector2D Center,FVector2D Size);
 
     FTimerHandle JoystickTimer;
