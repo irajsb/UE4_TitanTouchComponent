@@ -141,11 +141,14 @@ void UTouchObject::Tick()
   if(Data.Type==ETouchComponentType::Joystick)
   {
       if(ReservedIndex!=255&&bIsPressed==true)
-      {
-          const FVector AxisSize=FVector( CanvasLocation-TouchLocation,0);
-          if(Data.FollowTouchSize!=0&&AxisSize.Size()>Data.FollowTouchSize&&(SquareCenter.IsZero()||(IsVector2DInRange(Data.Center,SquareCenter,Data.SquareSize/2)||IsVector2DInRange(TouchLocation,SquareCenter,Data.SquareSize/2))))
-             Data. Center=UKismetMathLibrary::Vector2DInterpTo(Data.Center,TouchLocation,1,0.01);
-   
+      {FVector2D Result;
+          const FVector AxisSize=FVector( Data.Center-TouchLocation,0);
+          if(Data.FollowTouchSize!=0&&AxisSize.Size()>Data.FollowTouchSize)
+            Result=UKismetMathLibrary::Vector2DInterpTo(Data.Center,TouchLocation/HUD->ResRatio,1,Data.DynamicJoystickSpeed);
+   if((IsVector2DInRange(Result,SquareCenter,Data.SquareSize/2)))
+   {
+       Data.Center=Result;
+   }
       }
       if(Data.BroadCastConstant)
           JoyStickAxis.Broadcast(XInput,YInput);

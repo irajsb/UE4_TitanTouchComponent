@@ -19,5 +19,5 @@ Pros:
 
 
 
-# 
+# Warning:Multi touch not supported for swipe component "Yet".
 

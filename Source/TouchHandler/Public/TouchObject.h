@@ -75,6 +75,8 @@ struct FTouchSetup
     bool  BroadCastConstant;
 	UPROPERTY(EditAnywhere)
     bool bRegisterTick;
+	UPROPERTY(EditAnywhere)
+    float DynamicJoystickSpeed;
 	
 	/*Pass input to lower priority components under this component or not*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -92,6 +94,7 @@ InActiveColor=	ActiveColor=FLinearColor::White;
 		FunctionalRadius=50;
 		Center.X=Center.Y=150;
 		VisualSize.X=VisualSize.Y=50;
+		DynamicJoystickSpeed=0.01;
 	}
 	
 	

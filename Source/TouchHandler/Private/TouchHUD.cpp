@@ -54,7 +54,7 @@ UCanvas* ATouchHUD::GetCanvas()const
 }
 
 void ATouchHUD::DrawDebugs()
-{//TODO Make this work using draw texture if needed
+{//T0DO Make this work using draw texture if needed
 
     for (int8 index=0;index!= TouchHandler->Components.Num();index++)
     {
