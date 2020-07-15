@@ -1,12 +1,12 @@
 # UE4 Titan Touch Component
-### Free open source touch component supporting joysticks buttons and panning for Unreal Engine
-#### This plugin was designed to satisfy needs of my own project you may need to add functionality to it to make it match needs of your project
+### Free open source touch component supporting joysticks buttons and panning for Unreal Engine.
+#### This plugin was designed to satisfy needs of my own project you may need to add functionality to it to make it match needs of your project.
 
 ------
 
-contributions are welcome
+contributions are welcome.
 
-
+Select Wiki tab for tutorials.
 
 Pros:
 
