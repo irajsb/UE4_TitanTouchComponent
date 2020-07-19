@@ -93,6 +93,7 @@ struct FTouchSetup
     FLinearColor ActiveColor;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FLinearColor InActiveColor;
+
 	
 	FTouchSetup()
 	{
@@ -157,5 +158,7 @@ uint8 ReservedIndex=255;
 	UPROPERTY()
 	UCanvas*Canvas;
 	FVector2D SquareCenter;
+	
+void PassInputToKeyAxis(float x,FKey Key);
 	FVector2D TouchLocation;
 };
