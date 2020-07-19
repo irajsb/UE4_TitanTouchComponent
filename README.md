@@ -16,6 +16,7 @@ Pros:
 - Color Tint Supported.
 - All Components fire OnPress ,OnRelease and OnMove events .
 - ZOrder supported.
+- Default Input Binding Now Supported
 
 
 
