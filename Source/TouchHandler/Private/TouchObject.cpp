@@ -18,36 +18,52 @@ static inline bool IsVector2DInRange(FVector2D in, FVector2D Center, FVector2D S
     return false;
 }
 void UTouchObject::HandlePress(FVector2D Location)
-{    //Handle Pressing 
+{    //Handle Pressing
+    if(Data.BroadCast)
     OnPress.Broadcast(Location);
     bIsPressed=true;
     TouchLocation=Location;
+    const FGamepadKeyNames::Type ReleaseKey = ( Data.PressInputKey.GetFName() );
+    FSlateApplication::Get().OnControllerButtonPressed(ReleaseKey,0,false);
 }
 
 void UTouchObject::HandleRelease(FVector2D Location)
 {//reset touch
     TouchLocation=Data.Center;
+    if(Data.BroadCast)
     OnRelease.Broadcast(Location);
-
+    const FGamepadKeyNames::Type ReleaseKey = ( Data.PressInputKey.GetFName() );
+    FSlateApplication::Get().OnControllerButtonReleased(ReleaseKey,0,false);
+    
     //recenter Thumb
     XInput=YInput=0;
     bIsPressed=false;
     ReservedIndex=255;
+    const FGamepadKeyNames::Type XAxis = ( Data.MainInputKey.GetFName() );
+    const FGamepadKeyNames::Type YAxis = ( Data.AltInputKey.GetFName()  );
+    FSlateApplication::Get().OnControllerAnalog(XAxis,0,0);
+    FSlateApplication::Get().OnControllerAnalog(YAxis,0,0);
 }
 
 void UTouchObject::HandleMove(FVector2D Location)
 {
+    const FGamepadKeyNames::Type XAxis = ( Data.MainInputKey.GetFName() );
+    const FGamepadKeyNames::Type YAxis = ( Data.AltInputKey.GetFName()  );
     if(ReservedIndex!=255&&bIsPressed==true){
         if(Data.Type==ETouchComponentType::Swipe)
         {
             const FVector2D SwipeAmount =TouchLocation-Location;
+            if(Data.BroadCast)
             JoyStickAxis.Broadcast(SwipeAmount.X,SwipeAmount.Y);
-
+         //
+            FSlateApplication::Get().OnControllerAnalog(XAxis,0,XInput);
+            FSlateApplication::Get().OnControllerAnalog(YAxis,0,YInput);
 
     
         }
         else
             {
+            if(Data.BroadCast)
             OnMove.Broadcast(Location); 
         }
 
@@ -65,6 +81,10 @@ void UTouchObject::HandleMove(FVector2D Location)
                 AxisSize.Y=UKismetMathLibrary::MapRangeClamped(AxisSize.Y,-Data.ThumbClamp,Data.ThumbClamp,-1,1);
                 XInput= AxisSize.GetClampedToSize2D(-1,1).X;
                 YInput=AxisSize.GetClampedToSize2D(-1,1).Y;
+           
+            FSlateApplication::Get().OnControllerAnalog(XAxis,0,XInput);
+            FSlateApplication::Get().OnControllerAnalog(YAxis,0,YInput);
+            
 //if we need to broadcast in tick we dont need this broadcast 
             if(!Data.BroadCastConstant)
                     JoyStickAxis.Broadcast(XInput,YInput);
@@ -151,6 +171,15 @@ void UTouchObject::Tick()
    }
       }
       if(Data.BroadCastConstant)
+      {
           JoyStickAxis.Broadcast(XInput,YInput);
+         
+          const FGamepadKeyNames::Type XAxis = ( Data.MainInputKey.GetFName() );
+          const FGamepadKeyNames::Type YAxis = ( Data.AltInputKey.GetFName()  );
+          FSlateApplication::Get().OnControllerAnalog(XAxis,0,XInput);
+          FSlateApplication::Get().OnControllerAnalog(YAxis,0,YInput);
+          
+          
+      }
   }
 }

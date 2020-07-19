@@ -32,7 +32,12 @@ USTRUCT(BlueprintType)
 struct FTouchSetup
 {
 	GENERATED_USTRUCT_BODY()
-
+	UPROPERTY(EditAnywhere, Category="Control", meta=(ToolTip="The main input to send from this control (for sticks, this is the horizontal axis)"))
+	FKey MainInputKey;
+	UPROPERTY(EditAnywhere, Category="Control", meta=(ToolTip="The alternate input to send from this control (for sticks, this is the vertical axis)"))
+	FKey AltInputKey;
+	UPROPERTY(EditAnywhere, Category="Control", meta=(ToolTip="For Handling press and release"))
+	FKey PressInputKey;
 	/* lower array number higher input priority*/
 	UPROPERTY(EditAnywhere)
         TEnumAsByte<ETouchComponentType> Type;
@@ -70,6 +75,9 @@ struct FTouchSetup
 	/*Size of Distance between touch and joystick that will make joystick follow touch 0 for disable*/
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
     float  FollowTouchSize;
+	/*Should Call BoradCastEvents*/
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
+	bool  BroadCast;
 	/* should broadcast only on move or broadcast constantly p.s:constant requires tick enabled*/
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
     bool  BroadCastConstant;
@@ -108,6 +116,7 @@ class TOUCHHANDLER_API UTouchObject : public UObject
 	
 	//
 	
+
 	/*skip rendering this component*/
 	UPROPERTY(BlueprintReadWrite)
 	bool bHidden;
