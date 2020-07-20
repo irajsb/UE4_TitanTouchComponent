@@ -26,7 +26,7 @@ void UTouchObject::PassInputToKeyAxis(float x, FKey Key)
     {	FSlateApplication::Get().SetAllUserFocusToGameViewport();
         const FGamepadKeyNames::Type Axis = ( Key.GetFName() );
         FSlateApplication::Get().OnControllerAnalog(Axis,0,x);
-        UE_LOG(LogTemp,Log,TEXT("%f"),x);
+    //    UE_LOG(LogTemp,Log,TEXT("%f"),x);
     }
     
 }
