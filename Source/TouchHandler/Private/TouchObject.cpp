@@ -20,8 +20,10 @@ static inline bool IsVector2DInRange(FVector2D in, FVector2D Center, FVector2D S
 
 void UTouchObject::PassInputToKeyAxis(float x, FKey Key)
 {
+    
+
     if( Key.IsValid())
-    {
+    {	FSlateApplication::Get().SetAllUserFocusToGameViewport();
         const FGamepadKeyNames::Type Axis = ( Key.GetFName() );
         FSlateApplication::Get().OnControllerAnalog(Axis,0,x);
         UE_LOG(LogTemp,Log,TEXT("%f"),x);
@@ -46,45 +48,55 @@ void UTouchObject::HandlePress(FVector2D Location)
 void UTouchObject::HandleRelease(FVector2D Location)
 {//reset touch
     TouchLocation=Data.Center;
+    PassInputToKeyAxis(0.0,Data.AltInputKey);
+    PassInputToKeyAxis(0.0,Data.MainInputKey);
+   
     if(Data.BroadCast)
     OnRelease.Broadcast(Location);
+    
     if(Data.PressInputKey.IsValid())
     {
         const FGamepadKeyNames::Type ReleaseKey = ( Data.PressInputKey.GetFName() );
-        FSlateApplication::Get().OnControllerButtonReleased(ReleaseKey,0,false);
+       FSlateApplication::Get().OnControllerButtonReleased(ReleaseKey,0,false);
+        
     }
-    
+
+ 
     //recenter Thumb
     XInput=YInput=0;
     bIsPressed=false;
     ReservedIndex=255;
-    PassInputToKeyAxis(0,Data.AltInputKey);
-    PassInputToKeyAxis(0,Data.MainInputKey);
     
+  
+   
+    SwipeAmount=FVector2D::ZeroVector;
     
    
 }
 
 void UTouchObject::HandleMove(FVector2D Location)
 {
-  
+  LocationChanged=true;
     if(ReservedIndex!=255&&bIsPressed==true){
         if(Data.Type==ETouchComponentType::Swipe)
         {
-            const FVector2D SwipeAmount =TouchLocation-Location;
-            if(Data.BroadCast)
-            JoyStickAxis.Broadcast(SwipeAmount.X,SwipeAmount.Y);
-         //
-            PassInputToKeyAxis(YInput,Data.AltInputKey);
-            PassInputToKeyAxis(XInput,Data.MainInputKey);
-
+             SwipeAmount =TouchLocation-Location;
+           
+           
+      
+            if(!Data.UpdateInputInTick)
+            {if(Data.BroadCast)
+                JoyStickAxis.Broadcast(SwipeAmount.X,SwipeAmount.Y);
+                PassInputToKeyAxis(SwipeAmount.Y,Data.AltInputKey);
+                PassInputToKeyAxis(SwipeAmount.X,Data.MainInputKey);
+            }
     
         }
         else
             {
             if(Data.BroadCast)
             OnMove.Broadcast(Location); 
-        }
+            }
 
         TouchLocation=Location;
 
@@ -100,13 +112,17 @@ void UTouchObject::HandleMove(FVector2D Location)
                 AxisSize.Y=UKismetMathLibrary::MapRangeClamped(AxisSize.Y,-Data.ThumbClamp,Data.ThumbClamp,-1,1);
                 XInput= AxisSize.GetClampedToSize2D(-1,1).X;
                 YInput=AxisSize.GetClampedToSize2D(-1,1).Y;
-            PassInputToKeyAxis(YInput,Data.AltInputKey);
-            PassInputToKeyAxis(XInput,Data.MainInputKey);
+            
+           
           
             
 //if we need to broadcast in tick we dont need this broadcast 
-            if(!Data.BroadCastConstant)
-                    JoyStickAxis.Broadcast(XInput,YInput);
+            if(!Data.UpdateInputInTick)
+            {    if(Data.BroadCast)
+                JoyStickAxis.Broadcast(XInput,YInput);
+                PassInputToKeyAxis(YInput,Data.AltInputKey);
+                PassInputToKeyAxis(XInput,Data.MainInputKey);
+            }
          
         }
 
@@ -117,11 +133,13 @@ void UTouchObject::HandleMove(FVector2D Location)
 
 
 void UTouchObject::Tick()
-{
-  if(Data.Type==ETouchComponentType::Joystick)
-  {
-      if(ReservedIndex!=255&&bIsPressed==true)
-      {FVector2D Result;
+{const bool bIsActive=ReservedIndex!=255&&bIsPressed==true;
+  
+      if(bIsActive)
+      {
+          if(Data.Type==ETouchComponentType::Joystick)
+        {
+          FVector2D Result;
           const FVector AxisSize=FVector( Data.Center-TouchLocation,0);
           if(Data.FollowTouchSize!=0&&AxisSize.Size()>Data.FollowTouchSize)
             Result=UKismetMathLibrary::Vector2DInterpTo(Data.Center,TouchLocation/HUD->ResRatio,1,Data.DynamicJoystickSpeed);
@@ -129,16 +147,40 @@ void UTouchObject::Tick()
    {
        Data.Center=Result;
    }
-      }
-      if(Data.BroadCastConstant)
+     
+      if(Data.UpdateInputInTick)
       {
           JoyStickAxis.Broadcast(XInput,YInput);
           PassInputToKeyAxis(YInput,Data.AltInputKey);
           PassInputToKeyAxis(XInput,Data.MainInputKey);
           
-          
       }
+      }
+          else if(ETouchComponentType::Swipe==Data.Type)
+          {
+
+              if(Data.UpdateInputInTick&&LocationChanged)
+              {LocationChanged=false;
+                  if(Data.BroadCast)
+                  JoyStickAxis.Broadcast(SwipeAmount.X,SwipeAmount.Y);
+                  PassInputToKeyAxis(SwipeAmount.Y,Data.AltInputKey);
+                  PassInputToKeyAxis(SwipeAmount.X,Data.MainInputKey);
+              }else
+              {
+                  JoyStickAxis.Broadcast(0,0);
+                  PassInputToKeyAxis(0,Data.AltInputKey);
+                  PassInputToKeyAxis(0,Data.MainInputKey);
+                  return;
+              }
+          }
+  }else
+  {
+      JoyStickAxis.Broadcast(0,0);
+      PassInputToKeyAxis(0,Data.AltInputKey);
+      PassInputToKeyAxis(0,Data.MainInputKey);
   }
+
+    
 }
 
 
@@ -156,7 +198,7 @@ void UTouchObject::DrawTouchObject()
         DrawJoystick();
     }
     else if(Data.Type==ETouchComponentType::Button){
-DrawButton();
+        DrawButton();
     }
     else if(Data.Type==ETouchComponentType::Swipe)
     {
@@ -203,5 +245,6 @@ void UTouchObject::DrawButton()
 
 void UTouchObject::DrawSwipe()
 {
+    
     CanvasLocation=FVector2D(HUD->ResRatio* Data.Center.X,HUD->ResRatio*Data.Center.Y);
 }

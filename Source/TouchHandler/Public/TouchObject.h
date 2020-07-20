@@ -76,11 +76,12 @@ struct FTouchSetup
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
     float  FollowTouchSize;
 	/*Should Call BoradCastEvents*/
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	bool  BroadCast;
-	/* should broadcast only on move or broadcast constantly p.s:constant requires tick enabled*/
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
-    bool  BroadCastConstant;
+	/* should tick just update visuals or pass input too ! p.s:constant requires tick enabled*/
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+    bool  UpdateInputInTick;
+	
 	UPROPERTY(EditAnywhere)
     bool bRegisterTick;
 	UPROPERTY(EditAnywhere)
@@ -158,7 +159,9 @@ uint8 ReservedIndex=255;
 	UPROPERTY()
 	UCanvas*Canvas;
 	FVector2D SquareCenter;
-	
+	FVector2D SwipeAmount;
+	/*Checks if location of swipe has changed*/
+	bool LocationChanged;
 void PassInputToKeyAxis(float x,FKey Key);
 	FVector2D TouchLocation;
 };
