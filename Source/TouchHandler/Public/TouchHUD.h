@@ -29,8 +29,10 @@ public:
     void DrawTextScaled(FString Text,float x ,float y ,UFont* Font, float TextPositionCorrection,FLinearColor Color);
     UCanvas* GetCanvas()const;
     /*Res relation relative to 1280*720*/
-    UPROPERTY()
-    float ResRatio;
+  
+    float ResRatioX;
+    float ResRatioY;
+    FVector2D ResRatio2D;
     /* Call this in Blueprint implementable function on recive draw HUD*/
     UFUNCTION(BlueprintCallable)
     void DrawDebugs();

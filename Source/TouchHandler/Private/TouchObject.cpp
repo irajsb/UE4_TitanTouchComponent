@@ -37,15 +37,18 @@ void UTouchObject::SetCoolDown(float in)
 
 void UTouchObject::HandlePress(FVector2D Location)
 {    //Handle Pressing
+
+   
     if(CoolDown>0)
         return;
+    
     if(Data.BroadCast)
     OnPress.Broadcast(Location);
     bIsPressed=true;
     TouchLocation=Location;
     
     if(Data.PressInputKey.IsValid())
-    {
+    { 
         const FGamepadKeyNames::Type ReleaseKey = ( Data.PressInputKey.GetFName() );
         FSlateApplication::Get().OnControllerButtonPressed(ReleaseKey,0,false);
     }
@@ -168,7 +171,7 @@ void UTouchObject::Tick()
           FVector2D Result;
           const FVector AxisSize=FVector( Data.Center-TouchLocation,0);
           if(Data.FollowTouchSize!=0&&AxisSize.Size()>Data.FollowTouchSize)
-            Result=UKismetMathLibrary::Vector2DInterpTo(Data.Center,TouchLocation/HUD->ResRatio,1,Data.DynamicJoystickSpeed);
+            Result=UKismetMathLibrary::Vector2DInterpTo(Data.Center,TouchLocation/HUD->ResRatio2D,1,Data.DynamicJoystickSpeed);
    if((IsVector2DInRange(Result,SquareCenter,Data.SquareSize/2)))
    {
        Data.Center=Result;
@@ -213,7 +216,7 @@ void UTouchObject::Tick()
 //Draw
 void UTouchObject::ReCenter(FVector2D Location)
 {//used to move joystick to touch location if inside square
-    Data.Center=Location/ HUD->ResRatio;
+    Data.Center=Location/ HUD->ResRatio2D;
 }
 
 void UTouchObject::DrawTouchObject()
@@ -259,7 +262,7 @@ void UTouchObject::DrawJoystick()
     }
     //Draw Thumb
  //Old code method to get object exact location in viewport
-    CanvasLocation=FVector2D(HUD->ResRatio* Data.Center.X,HUD->ResRatio*Data.Center.Y);
+    CanvasLocation=FVector2D(HUD->ResRatioX* Data.Center.X,HUD->ResRatioY*Data.Center.Y);
       
      
     
@@ -279,11 +282,11 @@ void UTouchObject::DrawButton()
     {  HUD->DrawTextureCentered(Data.InActiveBackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.DeActiveColor);
         
     }
-    CanvasLocation=FVector2D(HUD->ResRatio* Data.Center.X,HUD->ResRatio*Data.Center.Y);
+    CanvasLocation=FVector2D(HUD->ResRatioX* Data.Center.X,HUD->ResRatioY*Data.Center.Y);
 }
 
 void UTouchObject::DrawSwipe()
 {
     
-    CanvasLocation=FVector2D(HUD->ResRatio* Data.Center.X,HUD->ResRatio*Data.Center.Y);
+    CanvasLocation=FVector2D(HUD->ResRatioX* Data.Center.X,HUD->ResRatioY*Data.Center.Y);
 }

@@ -27,9 +27,9 @@ UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TOUCHHANDLER_API UTouchHandlerObject : public UActorComponent
 {
     GENERATED_BODY()
-public:
+    public:
     UPROPERTY(EditAnywhere)
-TArray<FTouchSetup>ComponentsSetup;
+    TArray<FTouchSetup>ComponentsSetup;
     /* >0 if you need extra functionality set to 0 to disable */
     UPROPERTY(EditAnywhere)
     float TickRate ;
@@ -38,7 +38,10 @@ TArray<FTouchSetup>ComponentsSetup;
 
     virtual void InitializeComponent()override;
     UTouchHandlerObject();
-
+    UFUNCTION(BlueprintCallable)
+        void AddTouchObject(FTouchSetup input,ATouchHUD* HUD,TArray<UTouchObject*>& Array);
+    UFUNCTION(BlueprintCallable)
+    void AddTouchObjectsFromArray(TArray<FTouchSetup>in,bool bInsertAtBegining);
     UFUNCTION(BlueprintCallable, Category = "Stuff", Meta = (ExpandEnumAsExecs = "Branches"))
  void PassInput(FVector Location , TEnumAsByte<ETouchInputBranch> Branches,ETouchIndex::Type FingerIndex );
     /* is "in" between center.x-size and center.x+size IE: is point in a square with center of center and edge length of size*/

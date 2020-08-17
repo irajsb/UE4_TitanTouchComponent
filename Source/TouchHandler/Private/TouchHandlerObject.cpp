@@ -11,6 +11,8 @@ UTouchHandlerObject::UTouchHandlerObject()
     
 }
 
+
+
 void UTouchHandlerObject::PassInput(FVector Location, TEnumAsByte<ETouchInputBranch> Branches,ETouchIndex::Type FingerIndex )
 {
     
@@ -18,8 +20,8 @@ const FVector2D TouchLocation=FVector2D(Location.X,Location.Y);
 
 for (uint8 Index=0;Index!=Components.Num();++Index)
 {//--Check if We are in range of square from center
-  const bool IsInsideCenterSquare=IsVector2DInRange(TouchLocation,Components[Index]->SquareCenter*Components[Index]->HUD->ResRatio,Components[Index]->Data.SquareSize/2);
-  const bool IsInsideThumbSquare=IsVector2DInRange(TouchLocation,Components[Index]->Data.Center*Components[Index]->HUD->ResRatio,Components[Index]->Data.SquareSize/2);
+  const bool IsInsideCenterSquare=IsVector2DInRange(TouchLocation,Components[Index]->SquareCenter*Components[Index]->HUD->ResRatio2D,Components[Index]->Data.SquareSize/2);
+  const bool IsInsideThumbSquare=IsVector2DInRange(TouchLocation,Components[Index]->Data.Center*Components[Index]->HUD->ResRatio2D,Components[Index]->Data.SquareSize/2);
     //IF input is press
     if(Branches==ETouchInputBranch::Press)
     {//check if we need to pass input to what components
@@ -32,7 +34,7 @@ if( !Components[Index]->Data.FixedJoystick && IsInsideCenterSquare)
            
             if(Components[Index]->Data.bConsumeInput)
                 break;
-        } else   if(Components[Index]->Data.Type==ETouchComponentType::Swipe&&IsInsideThumbSquare)
+        } else   if(Components[Index]->Data.Type!=ETouchComponentType::Joystick&&IsInsideThumbSquare)
         {//if swipe component we need to just check if its inside interaction square
             Components[Index]->ReservedIndex=FingerIndex;
             Components[Index]->HandlePress(TouchLocation);
@@ -40,7 +42,7 @@ if( !Components[Index]->Data.FixedJoystick && IsInsideCenterSquare)
             if(Components[Index]->Data.bConsumeInput)
                 break;
             
-        }
+        } 
         
     }
     //release and move just check if index was reserved by that finger index if it was pass it to that component
@@ -105,16 +107,33 @@ void UTouchHandlerObject::Timer()
 void UTouchHandlerObject::InitializeComponent()
 {
     //feed data from setup struct to Components 
-    ATouchHUD* OwnerHUD=Cast<ATouchHUD>(GetOwner());
-    for(uint8 Index=0;Index!=ComponentsSetup.Num();++Index)
-    {
-       
-        UTouchObject* TempObj=    NewObject<UTouchObject>(this);
-        Components.Add(TempObj);
-        TempObj->Data=ComponentsSetup[Index];
-      TempObj->SquareCenter=TempObj->Data.Center;
-        TempObj->HUD=OwnerHUD;
-    }
+    AddTouchObjectsFromArray(ComponentsSetup,false);
     //Start Timer
     GetWorld()->GetTimerManager().SetTimer(JoystickTimer,this ,&UTouchHandlerObject::Timer,TickRate,true);
+}
+void UTouchHandlerObject::AddTouchObject(FTouchSetup input,ATouchHUD* HUD,TArray<UTouchObject*>& Array)
+{   UTouchObject* TempObj=    NewObject<UTouchObject>(this);
+    Array.Add(TempObj);
+   
+    TempObj->Data=input;
+    TempObj->SquareCenter=TempObj->Data.Center;
+    TempObj->HUD=HUD;
+}
+
+void UTouchHandlerObject::AddTouchObjectsFromArray(TArray<FTouchSetup>in,bool bInsertAtBegining)
+{  TArray<UTouchObject*>TempObjects;
+    ATouchHUD* OwnerHUD=Cast<ATouchHUD>(GetOwner());
+    for(uint8 Index=0;Index!=in.Num();++Index)
+    {
+        AddTouchObject(in[Index],OwnerHUD,TempObjects);
+     
+    }
+    if(bInsertAtBegining)
+    {
+        TempObjects.Append(Components);
+        Components=TempObjects;
+    }else
+    {
+        Components.Append(TempObjects);
+    }
 }

@@ -18,8 +18,11 @@ void ATouchHUD::DrawHUD()
     Super::DrawHUD();
     
     //Resratio keeps widgets relative to screen size
-    const float CanvasSize=Canvas->SizeX;
-    ResRatio=CanvasSize/1280;
+   
+    ResRatioX=Canvas->SizeX/1280.0f;
+    ResRatioY=Canvas->SizeY/720.0f;
+    
+    ResRatio2D=FVector2D(ResRatioX,ResRatioY);
   //loop through  objects and draw them if visible
 for (int8 index=TouchHandler->Components.Num()-1;index!= -1;--index)
 {
@@ -38,7 +41,7 @@ for (int8 index=TouchHandler->Components.Num()-1;index!= -1;--index)
 void ATouchHUD::DrawTextureCentered(UTexture2D* Texture,float x ,float y,float Width,float Height,FLinearColor Color)
 {
   //draw texture centered 
-        DrawTexture(Texture,x*ResRatio-(Width*ResRatio/2),y*ResRatio-(Height*ResRatio/2),Width*ResRatio,Height*ResRatio,0,0,1,1,Color,BLEND_Translucent,1,false);
+        DrawTexture(Texture,x*ResRatioX-(Width*ResRatioX/2),y*ResRatioY-(Height*ResRatioY/2),Width*ResRatioX,Height*ResRatioX,0,0,1,1,Color,BLEND_Translucent,1,false);
    
    
            
@@ -47,19 +50,19 @@ void ATouchHUD::DrawTextureCentered(UTexture2D* Texture,float x ,float y,float W
 void ATouchHUD::DrawTextureCentered(UTexture2D* Texture, float x, float y, float Width, float Height,
     FLinearColor Color, float Rotation)
 {
-    DrawTexture(Texture,x*ResRatio-(Width*ResRatio/2),y*ResRatio-(Height*ResRatio/2),Width*ResRatio,Height*ResRatio,0,0,1,1,Color,BLEND_Translucent,1,false,Rotation);
+    DrawTexture(Texture,x*ResRatioX-(Width*ResRatioX/2),y*ResRatioY-(Height*ResRatioY/2),Width*ResRatioX,Height*ResRatioX,0,0,1,1,Color,BLEND_Translucent,1,false,Rotation);
 
 }
 
 void ATouchHUD::DrawDebugRectCentered(FLinearColor col, float x, float y, float w, float h)
 {//just for debugging
-    DrawRect(col,ResRatio*(x-w/2),ResRatio*(y-h/2),ResRatio*w,ResRatio*h);
+    DrawRect(col,ResRatioX*(x-w/2),ResRatioY*(y-h/2),ResRatioX*w,ResRatioX*h);
 }
 
 void ATouchHUD::DrawTextScaled(FString Text, float x, float y, UFont* Font, float TextPositionCorrection,
     FLinearColor Color)
 {
-    DrawText(Text,Color,x-TextPositionCorrection,y-TextPositionCorrection,Font,ResRatio,true);
+    DrawText(Text,Color,x-TextPositionCorrection,y-TextPositionCorrection,Font,ResRatioX,true);
 }
 
 
