@@ -17,28 +17,26 @@ void UTouchHandlerObject::PassInput(FVector Location, TEnumAsByte<ETouchInputBra
 const FVector2D TouchLocation=FVector2D(Location.X,Location.Y);
 
 for (uint8 Index=0;Index!=Components.Num();++Index)
-{//IF input is press 
+{//--Check if We are in range of square from center
+  const bool IsInsideCenterSquare=IsVector2DInRange(TouchLocation,Components[Index]->SquareCenter*Components[Index]->HUD->ResRatio,Components[Index]->Data.SquareSize/2);
+  const bool IsInsideThumbSquare=IsVector2DInRange(TouchLocation,Components[Index]->Data.Center*Components[Index]->HUD->ResRatio,Components[Index]->Data.SquareSize/2);
+    //IF input is press
     if(Branches==ETouchInputBranch::Press)
     {//check if we need to pass input to what components
-        if(IsVector2DInRange(TouchLocation,Components[Index]->CanvasLocation,Components[Index]->Data.FunctionalRadius*Components[Index]->HUD->ResRatio/2))
-        {
-            Components[Index]->HandlePress(TouchLocation);
+        if(Components[Index]->Data.Type==ETouchComponentType::Joystick&&(IsInsideThumbSquare||IsInsideCenterSquare))
+        {//if touch was outside joystick interaction radius but was inside joystick interaction square we move joystick to touch location
             Components[Index]->ReservedIndex=FingerIndex;
-            //if input consumed we break the loop
-            if(Components[Index]->Data.bConsumeInput)
-                break;
-        }else if(Components[Index]->Data.Type==ETouchComponentType::Joystick&&IsVector2DInRange(TouchLocation,Components[Index]->SquareCenter*Components[Index]->HUD->ResRatio,Components[Index]->Data.SquareSize/2))
-        {//if touch was outside joytstick interaction radius but was inside joystick interaction square we move joystick to touch location 
-
+if( !Components[Index]->Data.FixedJoystick && IsInsideCenterSquare)
             Components[Index]->ReCenter(TouchLocation);
             Components[Index]->HandlePress(TouchLocation);
-            Components[Index]->ReservedIndex=FingerIndex;
+           
             if(Components[Index]->Data.bConsumeInput)
                 break;
-        } else   if(Components[Index]->Data.Type==ETouchComponentType::Swipe&&IsVector2DInRange(TouchLocation,Components[Index]->SquareCenter*Components[Index]->HUD->ResRatio,Components[Index]->Data.SquareSize/2))
-        {//if swipe component we need to just check if its inside interaction square 
-            Components[Index]->HandlePress(TouchLocation);
+        } else   if(Components[Index]->Data.Type==ETouchComponentType::Swipe&&IsInsideThumbSquare)
+        {//if swipe component we need to just check if its inside interaction square
             Components[Index]->ReservedIndex=FingerIndex;
+            Components[Index]->HandlePress(TouchLocation);
+           
             if(Components[Index]->Data.bConsumeInput)
                 break;
             
@@ -105,8 +103,9 @@ void UTouchHandlerObject::Timer()
 }
 
 void UTouchHandlerObject::InitializeComponent()
-{//feed data from setup struct to Components 
-ATouchHUD* OwnerHUD=Cast<ATouchHUD>(GetOwner());
+{
+    //feed data from setup struct to Components 
+    ATouchHUD* OwnerHUD=Cast<ATouchHUD>(GetOwner());
     for(uint8 Index=0;Index!=ComponentsSetup.Num();++Index)
     {
        

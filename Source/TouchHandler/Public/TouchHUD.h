@@ -24,7 +24,9 @@ public:
     ATouchHUD();
     virtual void DrawHUD()override;
     void DrawTextureCentered(UTexture2D* Texture,float x ,float y,float Width,float Height,FLinearColor Color);
+    void DrawTextureCentered(UTexture2D* Texture,float x ,float y,float Width,float Height,FLinearColor Color,float Rotation);
     void  DrawDebugRectCentered(FLinearColor col,float x ,float y ,float w ,float h);
+    void DrawTextScaled(FString Text,float x ,float y ,UFont* Font, float TextPositionCorrection,FLinearColor Color);
     UCanvas* GetCanvas()const;
     /*Res relation relative to 1280*720*/
     UPROPERTY()

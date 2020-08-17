@@ -31,8 +31,14 @@ void UTouchObject::PassInputToKeyAxis(float x, FKey Key)
     
 }
 
+void UTouchObject::SetCoolDown(float in)
+{CoolDown=in;
+}
+
 void UTouchObject::HandlePress(FVector2D Location)
 {    //Handle Pressing
+    if(CoolDown>0)
+        return;
     if(Data.BroadCast)
     OnPress.Broadcast(Location);
     bIsPressed=true;
@@ -43,13 +49,22 @@ void UTouchObject::HandlePress(FVector2D Location)
         const FGamepadKeyNames::Type ReleaseKey = ( Data.PressInputKey.GetFName() );
         FSlateApplication::Get().OnControllerButtonPressed(ReleaseKey,0,false);
     }
+
+if(Data.FixedJoystick||Data.IsSlider)
+    HandleMove(Location);
 }
 
 void UTouchObject::HandleRelease(FVector2D Location)
 {//reset touch
-    TouchLocation=Data.Center;
-    PassInputToKeyAxis(0.0,Data.AltInputKey);
-    PassInputToKeyAxis(0.0,Data.MainInputKey);
+    if(CoolDown>0)
+        return;
+    if(!Data.IsSlider)
+    {
+        TouchLocation=Data.Center;
+   
+        PassInputToKeyAxis(0.0,Data.AltInputKey);
+        PassInputToKeyAxis(0.0,Data.MainInputKey);
+    }
    
     if(Data.BroadCast)
     OnRelease.Broadcast(Location);
@@ -63,6 +78,7 @@ void UTouchObject::HandleRelease(FVector2D Location)
 
  
     //recenter Thumb
+    if(!Data.IsSlider)
     XInput=YInput=0;
     bIsPressed=false;
     ReservedIndex=255;
@@ -75,7 +91,9 @@ void UTouchObject::HandleRelease(FVector2D Location)
 }
 
 void UTouchObject::HandleMove(FVector2D Location)
-{
+{   if(CoolDown>0)
+    return;
+  
   LocationChanged=true;
     if(ReservedIndex!=255&&bIsPressed==true){
         if(Data.Type==ETouchComponentType::Swipe)
@@ -110,8 +128,16 @@ void UTouchObject::HandleMove(FVector2D Location)
  //map from range to -1,1     
                 AxisSize.X=UKismetMathLibrary::MapRangeClamped(AxisSize.X,-Data.ThumbClamp,Data.ThumbClamp,1,-1);
                 AxisSize.Y=UKismetMathLibrary::MapRangeClamped(AxisSize.Y,-Data.ThumbClamp,Data.ThumbClamp,-1,1);
+           
                 XInput= AxisSize.GetClampedToSize2D(-1,1).X;
+           
+          
                 YInput=AxisSize.GetClampedToSize2D(-1,1).Y;
+            //this may look dumb but doesnot work in other ways!(Tested)
+            if(Data.IgnoreX)
+                XInput=0;
+            if(Data.IgnoreY)
+                YInput=0;
             
            
           
@@ -133,7 +159,7 @@ void UTouchObject::HandleMove(FVector2D Location)
 
 
 void UTouchObject::Tick()
-{const bool bIsActive=ReservedIndex!=255&&bIsPressed==true;
+{const bool bIsActive=ReservedIndex!=255&&bIsPressed==true||Data.IsSlider;
   
       if(bIsActive)
       {
@@ -204,7 +230,12 @@ void UTouchObject::DrawTouchObject()
     {
         DrawSwipe();
     }
-
+if(CoolDown>0)
+{
+    
+  HUD->DrawTextScaled(FString::FromInt(CoolDown),Data.Center.X,Data.Center.Y,Data.Font,Data.TextPositionCorrection,Data.TextColor);
+  
+}
 
 }
 
@@ -215,12 +246,16 @@ void UTouchObject::DrawJoystick()
     //Draw BG
     if(bIsPressed)
     {
-        HUD->DrawTextureCentered(Data.BackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.ActiveColor);
-        HUD->DrawTextureCentered(Data.JoystickThumb,Data.Center.X-XInput*-Data.ThumbClamp,Data.Center.Y-YInput*Data.ThumbClamp,Data.VisualSize.X*(Data.FunctionalRadius/Data.VisualSize.X),Data.VisualSize.Y*(Data.FunctionalRadius/Data.VisualSize.Y),Data.ActiveColor);
+        HUD->DrawTextureCentered(Data.BackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.ActiveColor,Rotation);
+        HUD->DrawTextureCentered(Data.JoystickThumb,Data.Center.X-XInput*-Data.ThumbClamp,Data.Center.Y-YInput*Data.ThumbClamp,Data.VisualSize.X*(Data.ThumbDrawRadius/Data.VisualSize.X),Data.VisualSize.Y*(Data.ThumbDrawRadius/Data.VisualSize.Y),Data.ActiveColor);
+    }else if(CoolDown==0)
+    {
+        HUD->DrawTextureCentered(Data.InActiveBackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.StandbyColor,Rotation);
+        HUD->DrawTextureCentered(Data.InActiveJoystickThumb,Data.Center.X-XInput*-Data.ThumbClamp,Data.Center.Y-YInput*Data.ThumbClamp,Data.VisualSize.X*(Data.ThumbDrawRadius/Data.VisualSize.X),Data.VisualSize.Y*(Data.ThumbDrawRadius/Data.VisualSize.Y),Data.StandbyColor);
     }else
     {
-        HUD->DrawTextureCentered(Data.InActiveBackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.InActiveColor);
-        HUD->DrawTextureCentered(Data.InActiveJoystickThumb,Data.Center.X-XInput*-Data.ThumbClamp,Data.Center.Y-YInput*Data.ThumbClamp,Data.VisualSize.X*(Data.FunctionalRadius/Data.VisualSize.X),Data.VisualSize.Y*(Data.FunctionalRadius/Data.VisualSize.Y),Data.InActiveColor);
+        HUD->DrawTextureCentered(Data.InActiveBackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.DeActiveColor,Rotation);
+        HUD->DrawTextureCentered(Data.InActiveJoystickThumb,Data.Center.X-XInput*-Data.ThumbClamp,Data.Center.Y-YInput*Data.ThumbClamp,Data.VisualSize.X*(Data.ThumbDrawRadius/Data.VisualSize.X),Data.VisualSize.Y*(Data.ThumbDrawRadius/Data.VisualSize.Y),Data.DeActiveColor);
     }
     //Draw Thumb
  //Old code method to get object exact location in viewport
@@ -236,9 +271,13 @@ void UTouchObject::DrawButton()
     if(bIsPressed)
     {
         HUD->DrawTextureCentered(Data.BackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.ActiveColor);
-    }else
+    }else if(CoolDown==0)
     {
-        HUD->DrawTextureCentered(Data.InActiveBackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.InActiveColor);
+        HUD->DrawTextureCentered(Data.InActiveBackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.StandbyColor);
+    }
+    else
+    {  HUD->DrawTextureCentered(Data.InActiveBackGround,Data.Center.X,Data.Center.Y,Data.VisualSize.X,Data.VisualSize.Y,Data.DeActiveColor);
+        
     }
     CanvasLocation=FVector2D(HUD->ResRatio* Data.Center.X,HUD->ResRatio*Data.Center.Y);
 }

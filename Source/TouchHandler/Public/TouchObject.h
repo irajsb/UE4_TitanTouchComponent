@@ -24,6 +24,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FJoyStickAxis,  float,X,float,Y);
  	Joystick     UMETA(DisplayName = "Joystick"),
  	Swipe      UMETA(DisplayName = "Swipe"),
  	Button   UMETA(DisplayName = "Button"),
+ 	
  
  };
 
@@ -38,6 +39,14 @@ struct FTouchSetup
 	FKey AltInputKey;
 	UPROPERTY(EditAnywhere, Category="Control", meta=(ToolTip="For Handling press and release"))
 	FKey PressInputKey;
+/*Should we have X input .good for making 1D sliders and joysticks*/
+	UPROPERTY(EditAnywhere)
+	bool IgnoreX;
+	/*Should we have Y input .good for making 1D sliders and joysticks*/
+	UPROPERTY(EditAnywhere)
+	bool IgnoreY;
+	UPROPERTY(EditAnywhere)
+	bool FixedJoystick;
 	/* lower array number higher input priority*/
 	UPROPERTY(EditAnywhere)
         TEnumAsByte<ETouchComponentType> Type;
@@ -45,9 +54,9 @@ struct FTouchSetup
 	/*Center Location in screen for this component Center Will Be screen size *Center */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FVector2D Center;
-	/* Radial Offset from center which Component should handle as input(Joystick Background size) */
+	/* visual size for joystick*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        float FunctionalRadius;
+        float ThumbDrawRadius;
 	/*Size Will Be screen size *Visual size*/ 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector2D VisualSize;
@@ -66,9 +75,13 @@ struct FTouchSetup
 	/*Thumb Texture for joysticks only*/
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
         UTexture2D* JoystickThumb;
+	
 	/*Thumb Texture for joysticks only*/
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
         UTexture2D* InActiveJoystickThumb;
+	/*Slider is a joystick that does not recenter Needs an square size to be assigned*/
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
+	bool IsSlider;
 	/*Max Distance Thumb Can Travel (percentage of screenSize)*/
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (EditCondition = "Type==ETouchComponentType::Joystick"))
 	float ThumbClamp;
@@ -93,18 +106,33 @@ struct FTouchSetup
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FLinearColor ActiveColor;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FLinearColor InActiveColor;
+    FLinearColor StandbyColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor DeActiveColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor TextColor;
+	
+	/*Font To Draw on Buttons Scale font up to change the size*/
+	UPROPERTY(EditAnywhere)
+	UFont* Font;
+	/*We subtract this from text position in order to center Text ,Change this Based on your font size(Usually its Legacey font size  -9 )!*/
+	UPROPERTY(EditAnywhere)
+	float TextPositionCorrection;
 
 	
 	FTouchSetup()
 	{
-InActiveColor=	ActiveColor=FLinearColor::White;
+StandbyColor=ActiveColor=DeActiveColor=	ActiveColor=FLinearColor::White;
 		bConsumeInput=true;
 		ThumbClamp=65;
-		FunctionalRadius=50;
+		ThumbDrawRadius=50;
 		Center.X=Center.Y=150;
 		VisualSize.X=VisualSize.Y=50;
 		DynamicJoystickSpeed=0.01;
+		IgnoreX=false;
+		IgnoreY=false;
+		IsSlider=false;
+		FixedJoystick=false;
 	}
 	
 	
@@ -164,4 +192,9 @@ uint8 ReservedIndex=255;
 	bool LocationChanged;
 void PassInputToKeyAxis(float x,FKey Key);
 	FVector2D TouchLocation;
+	float CoolDown;
+	UPROPERTY(BlueprintReadWrite)
+	float Rotation;
+	UFUNCTION(BlueprintCallable)
+	void SetCoolDown(float in);
 };

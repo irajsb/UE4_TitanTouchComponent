@@ -38,16 +38,32 @@ for (int8 index=TouchHandler->Components.Num()-1;index!= -1;--index)
 void ATouchHUD::DrawTextureCentered(UTexture2D* Texture,float x ,float y,float Width,float Height,FLinearColor Color)
 {
   //draw texture centered 
-        DrawTexture(Texture,x*ResRatio-(Width*ResRatio/2),y*ResRatio-(Height*ResRatio/2),Width*ResRatio,Height*ResRatio,0,0,1,1,Color);
+        DrawTexture(Texture,x*ResRatio-(Width*ResRatio/2),y*ResRatio-(Height*ResRatio/2),Width*ResRatio,Height*ResRatio,0,0,1,1,Color,BLEND_Translucent,1,false);
    
    
            
+}
+
+void ATouchHUD::DrawTextureCentered(UTexture2D* Texture, float x, float y, float Width, float Height,
+    FLinearColor Color, float Rotation)
+{
+    DrawTexture(Texture,x*ResRatio-(Width*ResRatio/2),y*ResRatio-(Height*ResRatio/2),Width*ResRatio,Height*ResRatio,0,0,1,1,Color,BLEND_Translucent,1,false,Rotation);
+
 }
 
 void ATouchHUD::DrawDebugRectCentered(FLinearColor col, float x, float y, float w, float h)
 {//just for debugging
     DrawRect(col,ResRatio*(x-w/2),ResRatio*(y-h/2),ResRatio*w,ResRatio*h);
 }
+
+void ATouchHUD::DrawTextScaled(FString Text, float x, float y, UFont* Font, float TextPositionCorrection,
+    FLinearColor Color)
+{
+    DrawText(Text,Color,x-TextPositionCorrection,y-TextPositionCorrection,Font,ResRatio,true);
+}
+
+
+
 
 UCanvas* ATouchHUD::GetCanvas()const
 {return  Canvas;
@@ -67,7 +83,7 @@ void ATouchHUD::DrawDebugs()
             Square.G=1;
             Square.A=0.05;
            DrawDebugRectCentered(Square,Component->SquareCenter.X,Component->SquareCenter.Y,Component->Data.SquareSize.X,Component->Data.SquareSize.Y);
-            DrawDebugRectCentered(Thumb,Component->Data.Center.X-Component->XInput*-Component->Data.ThumbClamp,Component->Data.Center.Y-Component->YInput*Component->Data.ThumbClamp,Component->Data.VisualSize.X*(Component->Data.FunctionalRadius/Component->Data.VisualSize.X),Component->Data.VisualSize.Y*(Component->Data.FunctionalRadius/Component->Data.VisualSize.Y));
+            DrawDebugRectCentered(Thumb,Component->Data.Center.X-Component->XInput*-Component->Data.ThumbClamp,Component->Data.Center.Y-Component->YInput*Component->Data.ThumbClamp,Component->Data.VisualSize.X*(Component->Data.ThumbDrawRadius/Component->Data.VisualSize.X),Component->Data.VisualSize.Y*(Component->Data.ThumbDrawRadius/Component->Data.VisualSize.Y));
             DrawDebugRectCentered(FLinearColor::Blue,Component->Data.Center.X,Component->Data.Center.Y,6,6);
 
         }else if(Component->Data.Type==ETouchComponentType::Swipe)

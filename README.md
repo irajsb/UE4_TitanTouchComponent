@@ -17,8 +17,14 @@ Pros:
 - All Components fire OnPress ,OnRelease and OnMove events .
 - ZOrder supported.
 - Default Input Binding Now Supported
+- Slider Support Added
+# ChangeLog: 
+- Added Support for cooldown (Find a refrence to object and set cooldown to >0)
+- Added support for  Background joystick Rotation
+- Added support for Sliders
+- Added support for 1D Joysticks
+- Draw Text On Top of Components 
+(Use Old Branches and commits if you dont need these features to prevent additional overhead!).s
 
 
-
-# Warning:Multi touch not supported for swipe component "Yet".
 
