@@ -3,15 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Engine/Canvas.h"
 #include "GameFramework/HUD.h"
-#include "UObject/ObjectMacros.h"
+#include "GameFramework/SaveGame.h"
 
 #include "TouchHUD.generated.h"
 
 /**
 * 
 */
+
+
 UCLASS()
 class TOUCHHANDLER_API ATouchHUD : public AHUD
 {
@@ -36,4 +39,8 @@ public:
     /* Call this in Blueprint implementable function on recive draw HUD*/
     UFUNCTION(BlueprintCallable)
     void DrawDebugs();
+    UFUNCTION(BlueprintImplementableEvent)
+    void CreateDefaultTouchHud();
+    UFUNCTION(BlueprintImplementableEvent)
+   void LoadTouchHudFromSave(USaveGame* in);
 };
